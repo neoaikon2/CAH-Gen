@@ -8,7 +8,7 @@ cardfile = "responses.txt"
 #gptmodel = "EleutherAI/gpt-neo-125M"
 gptmodel = "EleutherAI/gpt-neo-1.3B"
 #gptmodel = "EleutherAI/gpt-neo-2.7B"
-response_length = 750
+response_length = 150
 
 print("Loading " + cardfile + " and generating Markov Chain...")
 # Import ~5k response cards
@@ -27,24 +27,25 @@ print("Done!\r\n")
 
 def CreatePrompt():
 	tmpPrompt = ""
-	# Use the markov chain to generate 50 unique response cards
-	for i in range(50):
+	# Use the markov chain to generate a bunch of unique response cards
+	for i in range(75):
 		while(True):
-			text = markov.make_short_sentence(35)
+			text = markov.make_short_sentence(50)
 			# Make sure it isn't None, which is a no-no
 			if(type(text) == type("")):
 				break
 		# Build the prompt
 		tmpPrompt = tmpPrompt + text + "\r\n"
-	# Return the completed set of 50 responses
+	# Return the completed set of responses
 	return tmpPrompt
 	
 def CreateResponses(prompt):
 	# Generate the input IDs for the prompt
 	input_ids = tokenizer(prompt, return_tensors="pt").input_ids	
+	bad_ids = tokenizer(["cock","faggot"]).input_ids
 	print("Generating response cards...\r\n")
 	# Use GPT to generate some responses
-	gen_tokens = model.generate(input_ids, do_sample=True, temperature=1.23, repetition_penalty=2.0, top_k=100, max_length=response_length)
+	gen_tokens = model.generate(input_ids, bad_words_ids=bad_ids, do_sample=True, temperature=1.23, repetition_penalty=2.0, top_k=100, max_length=(len(prompt)/4)+response_length)
 	# Decode the result
 	return tokenizer.batch_decode(gen_tokens)[0]
 
